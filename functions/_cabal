@@ -1,0 +1,286 @@
+#compdef cabal
+
+#vim: set et sw=2
+
+_cabal() {
+  local help verbosity builddir register paths compiler_opts package_opts
+  local cabal_opts
+
+  help=('(-h --help)'{-h,--help}'[Show this help text]')
+  verbosity=('(-v --verbose)'{-v+,--verbose=-}'[Control verbosity (0--3)]:verbosity:__cabal_verbosity')
+  builddir='--builddir=[The directory where Cabal puts generated build files]:directory:_directories'
+  register=(
+    "(--user --global)--user[Register in the user\'s package database]" \
+    "(--user --global)--global[Register in the system-wide package database]")
+  compiler=(
+    '(-w -g --ghc --nhc --jhc --hugs --with-compiler)'{-g,--ghc}'[Compile with GHC]'
+    '(-w -g --ghc --nhc --jhc --hugs --with-compiler)--nhc[Compile with NHC]'
+    '(-w -g --ghc --nhc --jhc --hugs --with-compiler)--jhc[Compile with JHC]'
+    '(-w -g --ghc --nhc --jhc --hugs --with-compiler)--hugs[Compile with Hugs]'
+    '(-w -g --ghc --nhc --jhc --hugs --with-compiler)'{-w+,--with-compiler=-}'[Give the path to a particular compiler]:file:_files'
+    '--with-hc-pkg=[give the path to the package tool]:file:_files'
+    )
+  paths=(
+    '--prefix=[bake this prefix in preparation for installation]:directory:_directories'
+    '--bindir=[installation directory for executables]:directory:_directories'
+    '--libdir=[installation directory for libraries]:directory:_directories'
+    '--libsubdir=[subdirectory of libdir where libraries are installed]:directory:_directories'
+    '--libexecdir=[installation directory for program executables]:directory:_directories'
+    '--datadir=[installation directory for read-only data]:directory:_directories'
+    '--datasubdir=[subdirectory of datadir where data files are installed]:directory:_directories'
+    '--docdir=[installation directory for documentation]:directory:_directories'
+    '--htmldir=[installation directory for HTML documentation]:directory:_directories'
+    '--haddockdir=[installation directory for haddock interfaces]:directory:_directories'
+    '(-b --scratchdir)'{-b+,--scratchdir=}'[directory to receive the built package]:directory:_directories'
+    '--program-prefix=[prefix to be applied to installed executables]'
+    '--program-suffix=[suffix to be applied to installed executables]'
+    '--enable-library-vanilla[enable vanilla libraries]'
+    '--disable-library-vanilla[disable vanilla libraries]'
+    )
+  compiler_opts=(
+    '(-p --enable-library-profiling)'{-p,--enable-library-profiling}'[enable library profiling]'
+    '--disable-library-profiling[disable library profiling]'
+    '--enable-shared[enable shared library]'
+    '--disable-shared[disable shared library]'
+    '--enable-executable-profiling[enable executable profiling]'
+    '--disable-executable-profiling[disable executable profiling]'
+    '(-O --enable-optimization)'{-O-,--enable-optimization=-}'[build with optimization]:level:__cabal_optimization'
+    '--disable-optimization[disable optimization]'
+    '--enable-library-for-ghci[enable library for use with ghci]'
+    '--disable-library-for-ghci[disable library for use with ghci]'
+    '--enable-split-objs[enable split objects, to reduce binary sizes]'
+    '--disable-split-objs[disable split objects, to reduce binary sizes]'
+    '--enable-executable-stripping[enable strip executables on installation]'
+    '--disable-executable-stripping[disable strip executables on installation]'
+    '--configure-option=[extra option for configure]'
+    '--extra-include-dirs=[extra directories to search for include files]:directories:_directories'
+    '--extra-lib-dirs=[extra directories to search for libraries]:directories:_directories'
+    )
+  package_opts=(
+    '--package-db=[use a specific package db to satisfy dependencies]:directory:_directory'
+    )
+  cabal_opts=(
+    '(-f --flags)'{-f+,--flags=}'[force cabal file conditional values]:flag:__cabal_flags'
+    '--constraint=[a list of additional constraints]'
+    '--cabal-lib-version=[select which version of the cabal library to use]'
+    '--preference=[specify preferences (soft dependencies) on the package]'
+    )
+
+  # build level reporting
+  (( $+functions[__cabal_build_level] )) ||
+  __cabal_build_level() {
+    local level
+    level=(none anonymous detailed)
+    _describe -t level "level" level
+  }
+
+  # cabal file flags
+  (( $+functions[__cabal_flags] )) ||
+  __cabal_flags() {
+    local flags
+    if [[ $_cabal_local_config_pwd != $PWD ]]; then
+      flags=( $(grep -i '^flag' $PWD/*.cabal | awk '{print $2}') )
+      _cabal_local_config_pwd=$PWD
+      _cabal_local_config_flags=( {-,}$flags )
+    fi
+
+    _describe -t flag "flag" _cabal_local_config_flags
+  }
+
+  # optimization levels
+  (( $+functions[__cabal_optimization] )) ||
+  __cabal_optimization() {
+    local level
+    level=(0 1 2)
+    _describe -t level "level" level
+  }
+
+  # filter for cabal verbosity
+  (( $+functions[__cabal_verbosity] )) ||
+  __cabal_verbosity() {
+    local verbosity
+    verbosity=(0 1 2 3)
+    _describe -t verbosity "verbosity" verbosity
+  }
+
+  # Generate a list of cabal packages, and use them to match a package argument
+  (( $+functions[__cabal_packages] )) ||
+  __cabal_packages() {
+    if [[ $_cabal_local_package_list == "" || _cabal_local_update_index == "true" ]]; then
+      _cabal_local_package_list=()
+      for server in ~/.cabal/packages/* ; do
+      _cabal_local_package_list+=(
+        $(tar -tf $server/00-index.tar | tr -s '/' ' ' \
+         | awk '{print $2"-"$3}' | uniq))
+      done
+
+      _cabal_local_update_index=
+    fi
+
+    _multi_parts -- - _cabal_local_package_list
+  }
+
+
+  (( $+functions[_cabal_configure] )) ||
+  _cabal_configure() {
+    _arguments -s -w : $help $verbosity $builddir $register $compiler $paths \
+      $compiler_opts $package_opts $cabal_opts
+  }
+
+  (( $+functions[_cabal_install] )) ||
+  _cabal_install() {
+    _arguments -s -w : $help $verbosity $builddir $register $compiler $paths \
+      $compiler_opts $package_opts $cabal_opts \
+      '--enable-documentation[enable building of documentation]' \
+      '--disable-documentation[disable building of documentation]' \
+      '--dry-run[do not install anything, but print what would be installed]' \
+      '--reinstall[install even if it means installing the same version again]' \
+      '--root-cmd=[command to gain privileges when installing with --global]' \
+      '--symlink-bindir=[add symlinks to installed executables in this dir]:directory:_directories' \
+      '--build-summary=[save build summaries to this file]:file:_files' \
+      '--build-log=[save build logs to this file]:file:_files' \
+      '--remote-build-reporting=[generate build reports to send to a remote server]:level:__cabal_build_level' \
+      '*:package:__cabal_packages'
+  }
+
+  (( $+functions[_cabal_build] )) ||
+  _cabal_build() {
+    _arguments -s -w : $help $verbosity $builddir
+  }
+
+  (( $+functions[_cabal_copy] )) ||
+  _cabal_copy() {
+    _arguments -s -w : $help $verbosity $builddir \
+      '--inplace[copy the package into the install subdir of the dest prefix]' \
+      '--destdir=[where to unpack the packages]' \
+      '--enable-shell-wrappers[enable using shell wrapper scripts around executables]' \
+      '--disable-shell-wrappers[disable using shell wrapper scripts around executables]'
+  }
+
+  (( $+functions[_cabal_list] )) ||
+  _cabal_list() {
+    _arguments -s -w : $help $verbosity \
+      '--installed[Only print installed packages]' \
+      '--simple-output[Print in a easy-to-parse format]' \
+      '*:package:__cabal_packages' && ret=0
+  }
+
+  (( $+functions[_cabal_info] )) ||
+  _cabal_info() {
+    _arguments -s -w : $help $verbosity
+  }
+
+  (( $+functions[_cabal_update] )) ||
+  _cabal_update() {
+    _arguments -s -w : $help $verbosity
+  }
+
+  (( $+functions[_cabal_fetch] )) ||
+  _cabal_fetch() {
+    _arguments -s -w : $help $verbosity
+  }
+
+  (( $+functions[_cabal_upload] )) ||
+  _cabal_upload() {
+    _arguments -s -w : $help $verbosity \
+    '(-c --check)'{-c,--check}'[Do not upload, just do QA checks.]' \
+    '(-u --username)'{-u+,--username=-}'[Hackage username.]' \
+    '(-p --password)'{-p+,--password=-}'[Hackage password.]'
+  }
+
+  (( $+functions[_cabal_check] )) ||
+  _cabal_check() {
+    _arguments -s -w : $help
+  }
+
+  (( $+functions[_cabal_sdist] )) ||
+  _cabal_sdist() {
+    _arguments -s -w : $help $verbosity $builddir \
+      '--snapshot[Produce a snapshot sourde distribution]'
+  }
+
+  (( $+functions[_cabal_report] )) ||
+  _cabal_report() {
+    _arguments -s -w : $help $verbosity
+  }
+
+  (( $+functions[_cabal_unpack] )) ||
+  _cabal_unpack() {
+    _arguments -s -w : $help $verbosity \
+      '(-d --destdir)'{-d+,--destdir=-}'[where to unpack the packages]' \
+      '*:package:__cabal_packages'
+  }
+
+  (( $+functions[_cabal_clean] )) ||
+  _cabal_clean() {
+    _arguments -s -w : $help $verbosity $builddir \
+      '(-s --save-configure)'{-s,--save-configure}'[Do not remove dist/setup-configure]'
+  }
+
+  (( $+functions[_cabal_hscolour] )) ||
+  _cabal_hscolour() {
+    _arguments -s -w : $help $verbosity $builddir \
+      '--executables[Run hscolour for Executables targets]' \
+      '--css=-[Use a cascading style sheet]'
+  }
+
+  (( $+functions[_cabal_register] )) ||
+  _cabal_register() {
+    _arguments -s -w : $help $verbosity $builddir $register\
+      "--inplace[Register the new package in the build location]" \
+      "--gen-script[Generate a script to register later]" \
+      "--gen-pkg-config=+[Generate a package registration file instead]"
+  }
+
+  (( $+functions[_cabal_test] )) ||
+  _cabal_test() {
+    _arguments -s -w : $help $verbosity $builddir
+  }
+
+  (( $+functions[_cabal_help] )) ||
+  _cabal_help() {
+    _arguments -s -w : $help
+  }
+
+  local ret=1
+
+  if ((CURRENT == 2)); then
+    local commands
+    commands=(
+      'configure:Prepare to build the package.'
+      'install:Installs a list of packages.'
+      'list:List packages matching a search string.'
+      'info:Display detailed information about a particular package.'
+      'update:Updates list of known packages'
+      'upgrade:Upgrades installed packages to the latest available version'
+      'fetch:Downloads packages for later installation or study.'
+      'upload:Uploads source packages to Hackage'
+      'check:Check the package for common mistakes'
+      'sdist:Generate a source distribution file (.tar.gz).'
+      'report:Upload build reports to a remote server.'
+      'unpack:Unpacks packages for user inspection.'
+      'build:Make this package ready for installation.'
+      'copy:Copy the files into the install locations.'
+      'haddock:Generate Haddock HTML documentation.'
+      'clean:Clean up after a build'
+      'hscolour:Generate HsColour colourised code, in HTML format.'
+      'register:Register this package with the compiler.'
+      'test:Run the test suite, if any (configure with UserHooks).'
+      'help:Help about commands'
+      )
+    _describe -t commands 'cabal command' commands
+  elif ((CURRENT > 2)); then
+    if [[ ${words[1]} == "update" ]]; then
+      _cabal_local_update_index=true
+    else
+      _cabal_local_update_index=
+    fi
+
+    (( CURRENT-- ))
+    shift words
+    _call_function ret _cabal_${words[1]}
+
+  fi
+}
+
+_cabal

@@ -1,0 +1,47 @@
+# Redhat like prompt theme, with directory highlighting for git directories with
+# pending commits.
+
+prompt_trevor_help () {
+  cat <<'EOF'
+This prompt is color-scheme-able.  You can invoke it thus:
+
+  prompt trevor [<text-color> [<punctuation-color> [<dirty-git-dir-color [<unpushed-git-dir-color> [<background-color>]]]]]
+EOF
+}
+
+prompt_trevor_setup () {
+  if [[ $TERM == "dumb" ]] ; then
+    PROMPT="[%n@%m:%2~]%# "
+  else
+    text=${fg[${1:-'cyan'}]}
+    punc=${fg_bold[${2:-'white'}]}
+    background=${bg[${4:-'blue'}]}
+    dirty_dir=${fg_bold[${3:-'red'}]}
+    unpushed_dir=${fg_bold[${5:-'yellow'}]}
+
+    base_prompt="%{$background$punc%}[%{$text%}%n%{$punc%}@%{$text%}%m%{$punc%}:"
+
+    prompt_trevor_precmd () {
+      __status=`git status 2>&1`
+      # if the current directory is a git repo, check if there are any pending
+      # changest to commit
+      if [ -n "$(echo $__status | grep '\(modified\|new file\)')" ]; then
+        # turn the directory text color to dirty_dir if there are
+        git_color=$dirty_dir
+      # if the current directory is ahead of origin
+      elif [ -n "$(echo $__status | grep 'by [0-9]\+ commit')" ]; then
+        git_color=$unpushed_dir
+      else
+        # leave the directory text color alone
+        git_color=$text
+      fi
+
+      path_prompt="%{$git_color%}%2~%{$punc%}]%#%{$reset_color%} "
+      PROMPT="$base_prompt$path_prompt"
+    }
+
+    add-zsh-hook precmd prompt_trevor_precmd
+  fi
+}
+
+prompt_trevor_setup "$@"
