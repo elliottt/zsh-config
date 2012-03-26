@@ -63,6 +63,6 @@ compdef -a _cabal cabal
 eval `dircolors -b /etc/DIR_COLORS`
 
 # load in local config, if available
-if [[ -f ~/zsh/site-config ]]; then
-	. ~/zsh/site-config
+if [[ -f ~/.zsh/site-config ]]; then
+	. ~/.zsh/site-config
 fi
