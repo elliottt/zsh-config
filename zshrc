@@ -45,8 +45,6 @@ use_ghc() {
   export PATH=$1/bin:$PATH
 }
 
-use_ghc $HOME/ghc/7.4.1
-
 if [[ $TERM == "dumb" ]] ; then
   alias ls='ls --color=none'
 fi
