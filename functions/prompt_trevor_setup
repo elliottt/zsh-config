@@ -13,11 +13,11 @@ prompt_trevor_setup () {
   if [[ $TERM == "dumb" ]] ; then
     PROMPT="[%n@%m:%2~]%# "
   else
-    text=${fg[${1:-'cyan'}]}
-    punc=${fg_bold[${2:-'white'}]}
-    background=${bg[${4:-'blue'}]}
-    dirty_dir=${fg_bold[${3:-'red'}]}
-    unpushed_dir=${fg_bold[${5:-'yellow'}]}
+    text=$FX[reset]${FG[${1:-'cyan'}]}
+    punc=$FX[reset]$FX[bold]${FG[${2:-'white'}]}
+    background=${BG[${4:-'blue'}]}
+    dirty_dir=$FX[reset]$FX[bold]${FG[${3:-'red'}]}
+    unpushed_dir=$FX[reset]$FX[bold]${FG[${5:-'yellow'}]}
 
     base_prompt="%{$background$punc%}[%{$text%}%n%{$punc%}@%{$text%}%m%{$punc%}:"
 

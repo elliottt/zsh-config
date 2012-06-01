@@ -22,9 +22,10 @@ bindkey "^f" forward-word
 bindkey "^b" backward-word
 
 # completion
-autoload -U compinit colors promptinit
+autoload -U compinit colors promptinit spectrum
 compinit
 colors
+spectrum
 promptinit
 
 export EDITOR=vim
@@ -64,8 +65,8 @@ if [[ $TERM == "xterm" ]] ; then
   export TERM="xterm-256color"
 fi
 
-# prompt
-prompt trevor cyan blue red default yellow
+# prompt 196
+prompt trevor 031 240 196 000 214
 
 # cabal completion
 compdef -a _cabal cabal
