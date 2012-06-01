@@ -17,3 +17,21 @@ for color in {000..255}; do
     FG[$color]="[38;5;${color}m"
     BG[$color]="[48;5;${color}m"
 done
+
+# Add in named ansi colors
+typeset -A ansi_colors
+ansi_colors=(
+  black   000
+  red     001
+  green   002
+  yellow  003
+  blue    004
+  magenta 005
+  cyan    006
+  white   007
+  default 008
+)
+for key in ${(k)ansi_colors}; do
+    FG[$key]="[38;5;${ansi_colors[$key]}m"
+    BG[$key]="[48;5;${ansi_colors[$key]}m"
+done

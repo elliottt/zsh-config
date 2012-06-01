@@ -53,7 +53,7 @@ if [[ $TERM == "xterm" ]] ; then
 fi
 
 # prompt
-prompt trevor cyan blue red default yellow
+prompt trevor 014 blue red default yellow
 
 # cabal completion
 compdef -a _cabal cabal
