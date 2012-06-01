@@ -1,5 +1,3 @@
-USE_LOCAL_CABAL=y
-USE_LOCAL_GHC=ghc7.4.1
 
 # site-wide settings
 if [[ -f /etc/zshrc ]]; then
@@ -30,17 +28,6 @@ promptinit
 
 export EDITOR=vim
 
-# Path
-if [[ "${USE_LOCAL_CABAL}" = "y" ]]; then
-    echo "Using local cabal-installed files."
-    export PATH=${PATH}:${HOME}/.cabal/bin
-fi
-
-if [[ "${USE_LOCAL_GHC}" != "n" ]]; then
-    echo "Using local GHC: ${USE_LOCAL_GHC}"
-    export PATH=${PATH}:${HOME}/ghc/${USE_LOCAL_GHC}/bin
-fi
-
 # Aliases
 alias ls='ls --color=auto -F -h'
 alias grep='grep --color=auto'
@@ -65,8 +52,8 @@ if [[ $TERM == "xterm" ]] ; then
   export TERM="xterm-256color"
 fi
 
-# prompt 196
-prompt trevor 031 240 196 000 214
+# prompt
+prompt trevor cyan blue red default yellow
 
 # cabal completion
 compdef -a _cabal cabal
