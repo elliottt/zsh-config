@@ -1,3 +1,6 @@
+USE_LOCAL_CABAL=y
+USE_LOCAL_GHC=ghc7.4.1
+
 # site-wide settings
 if [[ -f /etc/zshrc ]]; then
   . /etc/zshrc
@@ -27,8 +30,15 @@ promptinit
 export EDITOR=vim
 
 # Path
-export PATH=/usr/java/default/bin:$PATH
-export PATH=$HOME/.cabal/bin:$PATH
+if [[ "${USE_LOCAL_CABAL}" = "y" ]]; then
+    echo "Using local cabal-installed files."
+    export PATH=${PATH}:${HOME}/.cabal/bin
+fi
+
+if [[ "${USE_LOCAL_GHC}" != "n" ]]; then
+    echo "Using local GHC: ${USE_LOCAL_GHC}"
+    export PATH=${PATH}:${HOME}/ghc/${USE_LOCAL_GHC}/bin
+fi
 
 # Aliases
 alias ls='ls --color=auto -F -h'
@@ -36,6 +46,7 @@ alias grep='grep --color=auto'
 alias rm='rm -v'
 alias vim='vim -p'
 alias yum='yum --color=auto'
+alias open='gnome-open'
 
 topit() { /usr/bin/top -p `pgrep $1` }
 vimfind() { find -name $1 -exec vim -p {} + }
