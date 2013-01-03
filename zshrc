@@ -50,6 +50,10 @@ fi
 
 if [[ $TERM == "xterm" ]] ; then
   export TERM="xterm-256color"
+
+  # colored tab-completion
+  zstyle -e ':completion:*:default' list-colors \
+    'reply=("${PREFIX:+=(#bi)($PREFIX:t)(?)*==02=01}:${(s.:.)LS_COLORS}")'
 fi
 
 # prompt
