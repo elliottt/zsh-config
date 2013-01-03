@@ -67,5 +67,5 @@ eval `dircolors -b /etc/DIR_COLORS`
 
 # load in local config, if available
 if [[ -f ~/.zsh/site-config ]]; then
-	. ~/.zsh/site-config
+  . ~/.zsh/site-config
 fi
