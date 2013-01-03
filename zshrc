@@ -46,14 +46,14 @@ use_ghc() {
 
 if [[ $TERM == "dumb" ]] ; then
   alias ls='ls --color=none'
+else
+  # colored tab-completion
+  zstyle -e ':completion:*:default' list-colors \
+    'reply=("${PREFIX:+=(#bi)($PREFIX:t)(?)*==02=01}:${(s.:.)LS_COLORS}")'
 fi
 
 if [[ $TERM == "xterm" ]] ; then
   export TERM="xterm-256color"
-
-  # colored tab-completion
-  zstyle -e ':completion:*:default' list-colors \
-    'reply=("${PREFIX:+=(#bi)($PREFIX:t)(?)*==02=01}:${(s.:.)LS_COLORS}")'
 fi
 
 # prompt
